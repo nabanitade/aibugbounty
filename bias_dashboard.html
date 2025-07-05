@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Bias Bounty - Loan Approval Bias Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            font-size: 1.2em;
+            color: #7f8c8d;
+            margin-bottom: 20px;
+        }
+
+        .critical-alert {
+            background: linear-gradient(135deg, #ff4757, #ff3838);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-weight: bold;
+            font-size: 1.1em;
+            text-align: center;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .card h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.4em;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-bottom: 15px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+            color: white;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .bias-gap {
+            background: linear-gradient(135deg, #ff7675, #d63031);
+            padding: 20px;
+            border-radius: 10px;
+            color: white;
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        .bias-gap.critical {
+            animation: urgent-pulse 1.5s infinite;
+        }
+
+        @keyframes urgent-pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        .mitigation-results {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .before-after {
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .before {
+            background: linear-gradient(135deg, #ff7675, #d63031);
+            color: white;
+        }
+
+        .after {
+            background: linear-gradient(135deg, #00b894, #00a085);
+            color: white;
+        }
+
+        .recommendations {
+            background: linear-gradient(135deg, #fdcb6e, #f39c12);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+
+        .recommendations h3 {
+            color: white;
+            border-bottom-color: white;
+        }
+
+        .recommendations ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .recommendations li {
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .recommendations li:before {
+            content: "🔧 ";
+            margin-right: 8px;
+        }
+
+        .intersectional-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 0.9em;
+        }
+
+        .intersectional-table th,
+        .intersectional-table td {
+            padding: 10px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+
+        .intersectional-table th {
+            background: linear-gradient(135deg, #6c5ce7, #5f3dc4);
+            color: white;
+            font-weight: bold;
+        }
+
+        .intersectional-table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        .high-bias {
+            background-color: #ffebee !important;
+            color: #c62828;
+            font-weight: bold;
+        }
+
+        .low-bias {
+            background-color: #e8f5e8 !important;
+            color: #2e7d32;
+            font-weight: bold;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            color: #7f8c8d;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .mitigation-results {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏦 AI Bias Bounty - Loan Approval Analysis</h1>
+            <div class="subtitle">Comprehensive Bias Detection & Mitigation Dashboard</div>
+            <div class="critical-alert">
+                🚨 CRITICAL BIAS DETECTED: 13.31% gap between White Men and Black Women
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <!-- Gender Bias Analysis -->
+            <div class="card">
+                <h3>👥 Gender Bias Analysis</h3>
+                <div class="chart-container">
+                    <canvas id="genderChart"></canvas>
+                </div>
+                <div class="bias-gap">
+                    <strong>Bias Gap: 12.58 percentage points</strong><br>
+                    Male (46.08%) vs Non-binary (33.50%)
+                </div>
+            </div>
+
+            <!-- Racial Bias Analysis -->
+            <div class="card">
+                <h3>🌍 Racial Bias Analysis</h3>
+                <div class="chart-container">
+                    <canvas id="raceChart"></canvas>
+                </div>
+                <div class="bias-gap">
+                    <strong>Bias Gap: 10.61 percentage points</strong><br>
+                    Multiracial (46.86%) vs Black (36.25%)
+                </div>
+            </div>
+
+            <!-- Feature Importance -->
+            <div class="card">
+                <h3>📊 Model Feature Importance</h3>
+                <div class="chart-container">
+                    <canvas id="featureChart"></canvas>
+                </div>
+                <div style="font-size: 0.9em; color: #7f8c8d; margin-top: 10px;">
+                    Protected attributes excluded from model for fairness
+                </div>
+            </div>
+
+            <!-- Intersectional Analysis -->
+            <div class="card">
+                <h3>🔍 Intersectional Bias (Race × Gender)</h3>
+                <table class="intersectional-table">
+                    <thead>
+                        <tr>
+                            <th>Group</th>
+                            <th>Sample Size</th>
+                            <th>Approval Rate</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="low-bias">
+                            <td>White Men</td>
+                            <td>2,928</td>
+                            <td>49.28%</td>
+                        </tr>
+                        <tr>
+                            <td>Multiracial Men</td>
+                            <td>107</td>
+                            <td>48.60%</td>
+                        </tr>
+                        <tr>
+                            <td>White Women</td>
+                            <td>3,080</td>
+                            <td>42.27%</td>
+                        </tr>
+                        <tr>
+                            <td>Asian Men</td>
+                            <td>297</td>
+                            <td>47.81%</td>
+                        </tr>
+                        <tr>
+                            <td>Hispanic Men</td>
+                            <td>874</td>
+                            <td>40.16%</td>
+                        </tr>
+                        <tr>
+                            <td>Black Men</td>
+                            <td>693</td>
+                            <td>36.49%</td>
+                        </tr>
+                        <tr class="high-bias">
+                            <td>Black Women</td>
+                            <td>620</td>
+                            <td>35.97%</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="bias-gap critical">
+                    <strong>CRITICAL INTERSECTIONAL GAP: 13.31%</strong><br>
+                    White Men vs Black Women
+                </div>
+            </div>
+
+            <!-- Disability & Other Biases -->
+            <div class="card">
+                <h3>♿ Additional Protected Attributes</h3>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-value">9.31%</span>
+                        <span class="stat-label">Disability Bias Gap</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">5.14%</span>
+                        <span class="stat-label">Citizenship Bias Gap</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">34.95%</span>
+                        <span class="stat-label">Disabled Approval Rate</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">44.26%</span>
+                        <span class="stat-label">Non-disabled Rate</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mitigation Results -->
+            <div class="card">
+                <h3>⚖️ Bias Mitigation Results</h3>
+                <div class="mitigation-results">
+                    <div class="before-after before">
+                        <div>BEFORE MITIGATION</div>
+                        <div style="font-size: 1.5em; margin: 10px 0;">13.31%</div>
+                        <div>Intersectional Gap</div>
+                    </div>
+                    <div class="before-after after">
+                        <div>AFTER MITIGATION</div>
+                        <div style="font-size: 1.5em; margin: 10px 0;">8.1%</div>
+                        <div>39.1% Reduction</div>
+                    </div>
+                </div>
+                
+                <div style="margin: 20px 0;">
+                    <h4>Mitigation Techniques Applied:</h4>
+                    <ul style="list-style: none; padding: 0;">
+                        <li>🔧 Reweighting by protected groups</li>
+                        <li>🔧 Post-processing threshold adjustment</li>
+                        <li>🔧 Feature selection (excluded protected attrs)</li>
+                        <li>🔧 Adversarial debiasing</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recommendations Section -->
+        <div class="recommendations">
+            <h3>🎯 Immediate Action Required</h3>
+            <ul>
+                <li>Halt current loan approval algorithm immediately</li>
+                <li>Implement manual oversight for all pending applications</li>
+                <li>Deploy bias monitoring dashboard in production</li>
+                <li>Conduct emergency bias training for all loan officers</li>
+                <li>Establish fairness metrics with <3% tolerance threshold</li>
+                <li>Implement continuous bias auditing pipeline</li>
+                <li>Legal review for fair lending compliance violations</li>
+                <li>Customer notification and remediation program</li>
+            </ul>
+        </div>
+
+        <div class="footer">
+            <strong>AI Bias Bounty Hackathon - July 4, 2025</strong><br>
+            Comprehensive bias analysis reveals systematic discrimination requiring immediate intervention.<br>
+            <em>All statistics based on 10,000 training samples with robust statistical validation.</em>
+        </div>
+    </div>
+
+    <script>
+        // Gender Bias Chart
+        const genderCtx = document.getElementById('genderChart').getContext('2d');
+        new Chart(genderCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Male', 'Female', 'Non-binary'],
+                datasets: [{
+                    label: 'Approval Rate (%)',
+                    data: [46.08, 40.63, 33.50],
+                    backgroundColor: [
+                        'rgba(52, 152, 219, 0.8)',
+                        'rgba(231, 76, 60, 0.8)',
+                        'rgba(155, 89, 182, 0.8)'
+                    ],
+                    borderColor: [
+                        'rgba(52, 152, 219, 1)',
+                        'rgba(231, 76, 60, 1)',
+                        'rgba(155, 89, 182, 1)'
+                    ],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    title: {
+                        display: true,
+                        text: 'Approval Rates by Gender',
+                        font: {
+                            size: 16,
+                            weight: 'bold'
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 50,
+                        title: {
+                            display: true,
+                            text: 'Approval Rate (%)'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Race Bias Chart
+        const raceCtx = document.getElementById('raceChart').getContext('2d');
+        new Chart(raceCtx, {
+            type: 'bar',
+            data: {
+                labels: ['White', 'Multiracial', 'Asian', 'Native Am.', 'Hispanic', 'Black'],
+                datasets: [{
+                    label: 'Approval Rate (%)',
+                    data: [45.69, 46.86, 45.32, 42.55, 38.54, 36.25],
+                    backgroundColor: [
+                        'rgba(46, 204, 113, 0.8)',
+                        'rgba(52, 152, 219, 0.8)',
+                        'rgba(155, 89, 182, 0.8)',
+                        'rgba(241, 196, 15, 0.8)',
+                        'rgba(230, 126, 34, 0.8)',
+                        'rgba(231, 76, 60, 0.8)'
+                    ],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    title: {
+                        display: true,
+                        text: 'Approval Rates by Race',
+                        font: {
+                            size: 16,
+                            weight: 'bold'
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 50,
+                        title: {
+                            display: true,
+                            text: 'Approval Rate (%)'
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            maxRotation: 45
+                        }
+                    }
+                }
+            }
+        });
+
+        // Feature Importance Chart
+        const featureCtx = document.getElementById('featureChart').getContext('2d');
+        new Chart(featureCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Credit Score', 'Income', 'Loan Amount', 'Age'],
+                datasets: [{
+                    data: [45.21, 28.47, 18.92, 7.40],
+                    backgroundColor: [
+                        'rgba(52, 152, 219, 0.8)',
+                        'rgba(46, 204, 113, 0.8)',
+                        'rgba(231, 76, 60, 0.8)',
+                        'rgba(241, 196, 15, 0.8)'
+                    ],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    },
+                    title: {
+                        display: true,
+                        text: 'Feature Importance Distribution',
+                        font: {
+                            size: 16,
+                            weight: 'bold'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Add some interactivity
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animate statistics on load
+            const statValues = document.querySelectorAll('.stat-value');
+            statValues.forEach(stat => {
+                const finalValue = stat.textContent;
+                const numericValue = parseFloat(finalValue);
+                if (!isNaN(numericValue)) {
+                    let currentValue = 0;
+                    const increment = numericValue / 50;
+                    const timer = setInterval(() => {
+                        currentValue += increment;
+                        if (currentValue >= numericValue) {
+                            stat.textContent = finalValue;
+                            clearInterval(timer);
+                        } else {
+                            stat.textContent = currentValue.toFixed(1) + (finalValue.includes('%') ? '%' : '');
+                        }
+                    }, 20);
+                }
+            });
+
+            // Add click handlers for cards
+            const cards = document.querySelectorAll('.card');
+            cards.forEach(card => {
+                card.addEventListener('click', function() {
+                    this.style.transform = 'scale(1.02)';
+                    setTimeout(() => {
+                        this.style.transform = '';
+                    }, 200);
+                });
+            });
+        });
+    </script>
+</body>
+</html>
