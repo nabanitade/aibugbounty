@@ -50,8 +50,6 @@ This type of tool is particularly valuable for organizations that need to ensure
 
 ---
 
-# Detect bias with any dataset at https://preview--bias-buster-ai-app.lovable.app/ 
-
 ## 🚨 Executive Summary
 
 We discovered **critical bias patterns** in the loan approval dataset with a **13.31 percentage point gap** between White men (49.28% approval) and Black women (35.97% approval). Our comprehensive analysis identified systematic discrimination across multiple protected attributes and implemented effective mitigation strategies that reduced bias by 39-51% while maintaining model performance.
@@ -63,6 +61,7 @@ We discovered **critical bias patterns** in the loan approval dataset with a **1
 - **`bias_analysis_model.py`** - Complete training & analysis code ✅  
 - **`bias_analysis_report.md`** - Comprehensive written report ✅
 - **`bias_dashboard.html`** - Interactive visualization dashboard ✅
+- **`Bias_hackathon_information.html`** - Detailed Hackathon Information ✅
 - **`README.md`** - This documentation file ✅
 
 ### Additional Files
