@@ -5,6 +5,53 @@
 **Competition**: HackTheFest AI Bias Bounty  
 **Date**: July 4, 2025  
 
+# 🚀 AI Bias Bounty Platform
+
+**Live Platform**: https://preview--bias-buster-ai-app.lovable.app/
+
+This is the **AI Bias Bounty Platform**, a comprehensive tool designed to detect, analyze, and mitigate bias in machine learning models. Here's what it does:
+
+## Core Purpose
+The platform helps identify and reduce unfair bias in ML models across different demographic groups (gender, age, race, etc.) while maintaining model performance.
+
+## Key Features
+
+**1. Data Management**
+- Upload training and test datasets (supports CSV format)
+- Handles large datasets (14K+ training rows, 30K+ test rows shown)
+
+**2. Model Training & Comparison**
+- Trains multiple ML algorithms simultaneously (Logistic Regression, Random Forest, XGBoost, Transformer)
+- Automatically identifies the best-performing model
+- Provides performance metrics (accuracy, F1 score, precision, recall)
+
+**3. Bias Detection & Analysis**
+- Analyzes bias across demographic groups (gender, age, geographic region, etc.)
+- Shows disparate impact through metrics like False Positive/Negative rates
+- Identifies which groups are being unfairly treated by the model
+
+**4. Bias Mitigation**
+- Offers multiple fairness techniques (like data reweighting)
+- Allows adjustable mitigation strength (conservative to aggressive)
+- Shows before/after comparison of bias reduction
+- Maintains performance while improving fairness
+
+**5. Model Interpretability**
+- SHAP analysis showing feature importance
+- LIME explanations for individual predictions
+- Fairlearn metrics for comprehensive bias assessment
+
+**6. Results & Export**
+- Generates submission files for competitions/deployment
+- Creates detailed bias audit reports
+- Provides comprehensive documentation of bias findings and mitigation strategies
+
+This type of tool is particularly valuable for organizations that need to ensure their AI systems are fair and compliant with regulations around algorithmic fairness, especially in sensitive domains like lending, hiring, or healthcare.
+
+---
+
+# Detect bias with any dataset at https://preview--bias-buster-ai-app.lovable.app/ 
+
 ## 🚨 Executive Summary
 
 We discovered **critical bias patterns** in the loan approval dataset with a **13.31 percentage point gap** between White men (49.28% approval) and Black women (35.97% approval). Our comprehensive analysis identified systematic discrimination across multiple protected attributes and implemented effective mitigation strategies that reduced bias by 39-51% while maintaining model performance.
@@ -235,7 +282,7 @@ feature_importance = dict(zip(features, np.abs(shap_values).mean(axis=0)))
 ## 📞 Contact & Support
 
 ### Team Information
-- **Primary Contact**: nabanita@privacylicense.ai
+- **Primary Contact**: nabanita@privacylicense.com
 - **Documentation**: All code is fully commented and documented
 - **Support**: Available for questions during judging period
 
